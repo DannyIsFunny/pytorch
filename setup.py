@@ -844,6 +844,28 @@ def configure_extension_build():
             extra_compile_args += ['-g']
             extra_link_args += ['-g']
 
+
+    package_type = os.getenv('PACKAGE_TYPE', 'wheel')
+    if cmake_cache_vars['USE_CUDA'] and package_type == 'wheel' and desired_cuda == "cu117":
+        extra_install_requires += [
+            'nvidia-cuda-runtime-cu11',
+            'nvidia-cudnn-cu11',
+            'nvidia-cufft-cu11',
+            'nvidia-curand-cu11',
+            'nvidia-cusolver-cu11',
+            'nvidia-cusparse-cu11',
+            'nvidia-npp-cu11',
+            'nvidia-nvjpeg-cu11',
+            'nvidia-cuda-cupti-cu11',
+            'nvidia-cuda-nvcc-cu11',
+            'nvidia-nvml-dev-cu11',
+            'nvidia-cuda-nvrtc-cu11',
+            'nvidia-nvtx-cu11',
+            'nvidia-cuda-sanitizer-api-cu11',
+            'nvidia-cublas-cu11',
+            'nvidia-nvml-dev-cu11',
+            'nvidia-nvtx-cu11']
+
     # Cross-compile for M1
     if IS_DARWIN:
         macos_target_arch = os.getenv('CMAKE_OSX_ARCHITECTURES', '')
@@ -978,9 +1000,14 @@ def main():
     if RUN_BUILD_DEPS:
         build_deps()
 
+
+
     extensions, cmdclass, packages, entry_points, extra_install_requires = configure_extension_build()
 
+
     install_requires += extra_install_requires
+
+
 
     # Read in README.md for our long_description
     with open(os.path.join(cwd, "README.md"), encoding="utf-8") as f:
