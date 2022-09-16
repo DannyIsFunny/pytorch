@@ -846,27 +846,12 @@ def configure_extension_build():
 
 
     desired_cuda = os.getenv('DESIRED_CUDA', '117')
-    report(f"before adding nvidia runtime {package_type} and {desired_cuda}")
     if package_type == 'manywheel' and desired_cuda == '117' :
-        report("extra_install_requires: nvidia-cuda-runtime-cu11")
+        report(f"Adding nvidia runtime {package_type} and {desired_cuda}")
         extra_install_requires += [
             'nvidia-cuda-runtime-cu11',
             'nvidia-cudnn-cu11',
-            'nvidia-cufft-cu11',
-            'nvidia-curand-cu11',
-            'nvidia-cusolver-cu11',
-            'nvidia-cusparse-cu11',
-            'nvidia-npp-cu11',
-            'nvidia-nvjpeg-cu11',
-            'nvidia-cuda-cupti-cu11',
-            'nvidia-cuda-nvcc-cu11',
-            'nvidia-nvml-dev-cu11',
-            'nvidia-cuda-nvrtc-cu11',
-            'nvidia-nvtx-cu11',
-            'nvidia-cuda-sanitizer-api-cu11',
-            'nvidia-cublas-cu11',
-            'nvidia-nvml-dev-cu11',
-            'nvidia-nvtx-cu11']
+            'nvidia-cublas-cu11']
 
     # Cross-compile for M1
     if IS_DARWIN:
