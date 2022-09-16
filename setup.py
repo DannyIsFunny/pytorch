@@ -847,7 +847,7 @@ def configure_extension_build():
 
     desired_cuda = os.getenv('DESIRED_CUDA', '117')
     report(f"before adding nvidia runtime {package_type} and {desired_cuda}")
-    if package_type == 'wheel' :
+    if package_type == 'manywheel' and desired_cuda == '117' :
         report("extra_install_requires: nvidia-cuda-runtime-cu11")
         extra_install_requires += [
             'nvidia-cuda-runtime-cu11',
