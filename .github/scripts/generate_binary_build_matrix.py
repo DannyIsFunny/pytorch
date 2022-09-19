@@ -223,7 +223,8 @@ def generate_wheels_matrix(os: str,
                         ),
                         "container_image": WHEEL_CONTAINER_IMAGES[arch_version],
                         "package_type": package_type,
-                        "build_name": f"{package_type}-py{python_version}-{gpu_arch_type}{gpu_arch_version}-without-cudnn".replace(
+                        "wheel_install_requirements": "nvidia-cuda-runtime-cu11, nvidia-cudnn-cu11, nvidia-cublas-cu11",
+                        "build_name": f"{package_type}-py{python_version}-{gpu_arch_type}{gpu_arch_version}-with-pypi-cudnn".replace(
                             ".", "_"
                         ),
                     }
@@ -239,6 +240,7 @@ def generate_wheels_matrix(os: str,
                     ),
                     "container_image": WHEEL_CONTAINER_IMAGES[arch_version],
                     "package_type": package_type,
+                    "wheel_install_requirements": "",
                     "build_name": f"{package_type}-py{python_version}-{gpu_arch_type}{gpu_arch_version}".replace(
                         ".", "_"
                     ),
