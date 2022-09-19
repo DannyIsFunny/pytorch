@@ -111,10 +111,6 @@ Tensor transformer_encoder_layer_forward(
 
   // TODO: This logic will be replaced by a unified ScaledDotProduct
   bool use_flash_attention = false;
-#if USE_FLASH_ATTENTION
-  // Use flash attention by default if the user has built PyTorch with USE_FLASH_ATTENTION.
-  use_flash_attention = true;
-#endif
   if (_use_flash_attention) {
     // Overwrite the behavior if the user chooses to do so.
     use_flash_attention = *_use_flash_attention;

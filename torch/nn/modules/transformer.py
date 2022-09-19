@@ -434,8 +434,6 @@ class TransformerEncoderLayer(Module):
         # meant to be a user facing API and intended to be removed soon.
         # NOTE: Do not set this to True by default! This is meant to
         # be a run time flag to experiment with a new, brittle feature.
-        # You can build PyTorch from source with USE_FLASH_ATTENTION=1
-        # if you want this to be True by default.
         self._use_flash_attention = None
 
     def __setstate__(self, state):
