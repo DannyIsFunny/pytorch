@@ -13,7 +13,9 @@
 // TODO Consider moving all flash_attention code, nested tensor included to
 // Transformer library
 
+#ifdef USE_FLASH_ATTENTION
 #include <ATen/native/transformers/cuda/flash_attn/fmha_api.h>
+#endif
 
 #include <ATen/native/nested/NestedTensorTransformerFunctions.h>
 #include <ATen/native/nested/NestedTensorMath.h>

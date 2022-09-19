@@ -725,13 +725,14 @@ set(BUILD_ONEDNN_GRAPH OFF)
 include(cmake/Dependencies.cmake)
 
 # Moved this cmake set option down here because CMAKE_CUDA_COMPILER_VERSION is not avaialble until now
-option(USE_FLASH_ATTENTION "Whether to build the flash_attention kernel for scaled dot product attention" ON)
-if(MSVC OR (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.6))
-  set(USE_FLASH_ATTENTION OFF)
-ENDIF()
+cmake_dependent_option(
+  USE_FLASH_ATTENTION
+  "Whether to build the flash_attention kernel for scaled dot product attention" ON
+  "NOT MSVC AND NOT CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.6" OFF)
 if(USE_FLASH_ATTENTION)
     ADD_DEFINITIONS(-DUSE_FLASH_ATTENTION)
 ENDIF()
+
 
 
 if(USE_CUDA AND (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.2) AND (CMAKE_HOST_SYSTEM_NAME MATCHES "Windows"))
