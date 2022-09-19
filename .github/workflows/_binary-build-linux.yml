@@ -56,9 +56,10 @@ on:
         type: string
         description: Desired python version
       PYTORCH_EXTRA_INSTALL_REQUIREMENTS:
-        required: true
+        required: false
         type: string
         description: Extra install requirements
+        default: ""
     secrets:
       github-token:
         required: true
