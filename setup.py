@@ -847,7 +847,7 @@ def configure_extension_build():
     # special CUDA 11.7 package that requires installation of cuda runtime, cudnn and cublas
     build_name = os.getenv('BUILD_NAME', '')
     if package_type == 'manywheel' and 'cuda11_7-without-cudnn' in build_name:
-        report(f"Adding nvidia runtime {package_type} and {desired_cuda}")
+        report(f"Adding nvidia runtime for {build_name}")
         extra_install_requires += [
             'nvidia-cuda-runtime-cu11',
             'nvidia-cudnn-cu11',
