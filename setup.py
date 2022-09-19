@@ -845,13 +845,11 @@ def configure_extension_build():
             extra_link_args += ['-g']
 
     # special CUDA 11.7 package that requires installation of cuda runtime, cudnn and cublas
-    build_name = os.getenv('BUILD_NAME', '')
-    if package_type == 'manywheel' and 'cuda11_7-without-cudnn' in build_name:
-        report(f"Adding nvidia runtime for {build_name}")
-        extra_install_requires += [
-            'nvidia-cuda-runtime-cu11',
-            'nvidia-cudnn-cu11',
-            'nvidia-cublas-cu11']
+    pytorch_extra_install_requirements = os.getenv('PYTORCH_EXTRA_INSTALL_REQUIREMENTS', '')
+    if pytorch_extra_install_requirements:
+        report(f"pytorch_extra_install_requirements: {pytorch_extra_install_requirements}")
+        extra_install_requires += pytorch_extra_install_requirements.split(",")
+
 
     # Cross-compile for M1
     if IS_DARWIN:
