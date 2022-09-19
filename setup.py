@@ -849,7 +849,7 @@ def configure_extension_build():
     if package_type == 'manywheel' and 'cuda11_7-without-cudnn' in build_name:
         report(f"Adding nvidia runtime {package_type} and {desired_cuda}")
         extra_install_requires += [
-            'nvidia-cuda-runtime-cu11',cd
+            'nvidia-cuda-runtime-cu11',
             'nvidia-cudnn-cu11',
             'nvidia-cublas-cu11']
 
