@@ -47,6 +47,7 @@ jobs:
       DESIRED_PYTHON: "3.7"
       build_name: manywheel-py3_7-cuda10_2
       build_environment: linux-binary-manywheel
+      
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
