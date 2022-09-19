@@ -14,6 +14,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
   cancel-in-progress: true
 
+
 jobs:
   linux-focal-py3_7-gcc7-build:
     name: linux-focal-py3.7-gcc7
