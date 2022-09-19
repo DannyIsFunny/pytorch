@@ -211,9 +211,6 @@ cmake_dependent_option(
 cmake_dependent_option(
     USE_EXPERIMENTAL_CUDNN_V8_API "Use experimental cuDNN v8 API" ON
     "USE_CUDNN" OFF)
-cmake_dependent_option(
-    USE_FLASH_ATTENTION "Use flash attenion fused scaled dot product kernel" ON
-    "USE_CUDA AND NOT MSVC" OFF)
 option(USE_FBGEMM "Use FBGEMM (quantized 8-bit server operators)" ON)
 option(USE_KINETO "Use Kineto profiling library" ON)
 option(USE_CUPTI_SO "Use CUPTI as a shared library" ON)
@@ -728,7 +725,10 @@ set(BUILD_ONEDNN_GRAPH OFF)
 include(cmake/Dependencies.cmake)
 
 # Moved this cmake set option down here because CMAKE_CUDA_COMPILER_VERSION is not avaialble until now
-option(USE_FLASH_ATTENTION "Whether to build the flash_attention kernel for scaled dot product attention" OFF)
+option(USE_FLASH_ATTENTION "Whether to build the flash_attention kernel for scaled dot product attention" ON)
+if(MSVC OR (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.6))
+  set(USE_FLASH_ATTENTION OFF)
+ENDIF()
 if(USE_FLASH_ATTENTION)
     ADD_DEFINITIONS(-DUSE_FLASH_ATTENTION)
 ENDIF()
