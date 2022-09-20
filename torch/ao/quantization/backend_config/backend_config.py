@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 import torch
 from torch.ao.quantization.observer import _PartialWrapper
@@ -12,9 +12,17 @@ __all__ = [
     "BackendConfig",
     "BackendPatternConfig",
     "DTypeConfig",
+    "DTypeWithConstraints",
     "ObservationType",
 ]
 
+
+# DTypeWithConstraints dict keys
+DTYPE_DICT_KEY = "dtype"
+QUANT_MIN_DICT_KEY = "quant_min"
+QUANT_MAX_DICT_KEY = "quant_max"
+SCALE_MIN_DICT_KEY = "scale_min"
+SCALE_MAX_DICT_KEY = "scale_max"
 
 # DTypeConfig dict keys
 INPUT_DTYPE_DICT_KEY = "input_dtype"
@@ -44,6 +52,7 @@ INPUT_OUTPUT_OBSERVED_DICT_KEY = "input_output_observed"
 OVERWRITE_OUTPUT_FAKE_QUANTIZE_DICT_KEY = "overwrite_output_fake_quantize"
 OVERWRITE_OUTPUT_OBSERVER_DICT_KEY = "overwrite_output_observer"
 
+
 # TODO: maybe rename this to something that's not related to observer
 # e.g. QParamsType
 class ObservationType(Enum):
@@ -63,32 +72,95 @@ class ObservationType(Enum):
     example: torch.cat, maxpool
     """
 
+
+@dataclass
+class DTypeWithConstraints:
+    """
+    Config for specifying additional constraints for a given dtype, such as quantization value
+    ranges and scale value ranges, to be used in :class:`~torch.ao.quantization.backend_config.DTypeConfig`.
+    """
+    dtype: torch.dtype
+    quant_min: Optional[float] = None
+    quant_max: Optional[float] = None
+    scale_min: Optional[float] = None
+    scale_max: Optional[float] = None
+
+
 @dataclass
 class DTypeConfig:
     """
     Config for the set of supported input/output activation, weight, and bias data types for the
     patterns defined in :class:`~torch.ao.quantization.backend_config.BackendConfig`.
     """
-    input_dtype: Optional[torch.dtype] = None
-    output_dtype: Optional[torch.dtype] = None
-    weight_dtype: Optional[torch.dtype] = None
+    input_dtype: Optional[DTypeWithConstraints] = None
+    output_dtype: Optional[DTypeWithConstraints] = None
+    weight_dtype: Optional[DTypeWithConstraints] = None
     bias_dtype: Optional[torch.dtype] = None
     is_dynamic: Optional[bool] = None
+
+    def __init__(
+        self,
+        input_dtype: Union[torch.dtype, DTypeWithConstraints, None] = None,
+        output_dtype: Union[torch.dtype, DTypeWithConstraints, None] = None,
+        weight_dtype: Union[torch.dtype, DTypeWithConstraints, None] = None,
+        bias_dtype: Optional[torch.dtype] = None,
+        is_dynamic: Optional[bool] = None,
+    ):
+        if isinstance(input_dtype, torch.dtype):
+            input_dtype = DTypeWithConstraints(dtype=input_dtype)
+        if isinstance(output_dtype, torch.dtype):
+            output_dtype = DTypeWithConstraints(dtype=output_dtype)
+        if isinstance(weight_dtype, torch.dtype):
+            weight_dtype = DTypeWithConstraints(dtype=weight_dtype)
+        self.input_dtype = input_dtype
+        self.output_dtype = output_dtype
+        self.weight_dtype = weight_dtype
+        self.bias_dtype = bias_dtype
+        self.is_dynamic = is_dynamic
+
+    def get_input_dtype(self) -> Optional[torch.dtype]:
+        """
+        Return the input dtype as a `torch.dtype`.
+        """
+        return self.input_dtype.dtype if self.input_dtype is not None else None
+
+    def get_output_dtype(self) -> Optional[torch.dtype]:
+        """
+        Return the output dtype as a `torch.dtype`.
+        """
+        return self.output_dtype.dtype if self.output_dtype is not None else None
+
+    def get_weight_dtype(self) -> Optional[torch.dtype]:
+        """
+        Return the weight dtype as a `torch.dtype`.
+        """
+        return self.weight_dtype.dtype if self.weight_dtype is not None else None
+
+    def get_bias_dtype(self) -> Optional[torch.dtype]:
+        """
+        Return the bias dtype as a `torch.dtype``.
+        """
+        return self.bias_dtype
 
     @classmethod
     def from_dict(cls, dtype_config_dict: Dict[str, Any]) -> DTypeConfig:
         """
         Create a ``DTypeConfig`` from a dictionary with the following items (all optional):
-
-            "input_dtype": torch.dtype
-            "output_dtype": torch.dtype
-            "weight_dtype": torch.dtype
+            "input_dtype": torch.dtype or ``DTypeWithConstraints``
+            "output_dtype": torch.dtype or ``DTypeWithConstraints``
+            "weight_dtype": torch.dtype or ``DTypeWithConstraints``
             "bias_type": torch.dtype
             "is_dynamic": bool
         """
         input_dtype = dtype_config_dict.get(INPUT_DTYPE_DICT_KEY, None)
+        if input_dtype is not None and not isinstance(input_dtype, (torch.dtype, DTypeWithConstraints)):
+            raise ValueError("Expected input_dtype to be a torch.dtype or DTypeWithConstraints")
         output_dtype = dtype_config_dict.get(OUTPUT_DTYPE_DICT_KEY, None)
+        if output_dtype is not None and not isinstance(output_dtype, (torch.dtype, DTypeWithConstraints)):
+            raise ValueError("Expected output_dtype to be a torch.dtype or DTypeWithConstraints")
         weight_dtype = dtype_config_dict.get(WEIGHT_DTYPE_DICT_KEY, None)
+        if weight_dtype is not None and not isinstance(weight_dtype, (torch.dtype, DTypeWithConstraints)):
+            raise ValueError("Expected weight_dtype to be a torch.dtype or DTypeWithConstraints")
         bias_dtype = dtype_config_dict.get(BIAS_DTYPE_DICT_KEY, None)
         is_dynamic = dtype_config_dict.get(IS_DYNAMIC_DICT_KEY, None)
         return cls(input_dtype, output_dtype, weight_dtype, bias_dtype, is_dynamic)
