@@ -70,6 +70,10 @@ if [[ "$TEST_CONFIG" == *dynamo* ]]; then
   export PYTORCH_TEST_WITH_DYNAMO=1
 fi
 
+if [[ "$BUILD_ENVIRONMENT" == *cuda* && "$TEST_CONFIG" == *inductor* ]]; then
+  export PYTORCH_TEST_WITH_INDUCTOR=1
+fi
+
 # TODO: this condition is never true, need to fix this.
 if [[ -n "$PR_NUMBER" ]] && [[ -z "$CI_MASTER" || "$CI_MASTER" == "false" ]]; then
   # skip expensive checks when on PR and CI_MASTER flag is not set
@@ -180,13 +184,7 @@ test_dynamo_shard() {
     echo "NUM_TEST_SHARDS must be defined to run a Python test shard"
     exit 1
   fi
-  # Temporarily disable test_fx for dynamo pending the investigation on TTS
-  # regression in https://github.com/pytorch/torchdynamo/issues/784
-  time python test/run_test.py \
-    --exclude-jit-executor \
-    --exclude-distributed-tests \
-    --exclude \
-      test_autograd \
+  SKIP_LIST="test_autograd \
       test_proxy_tensor \
       test_quantization \
       test_public_bindings \
@@ -200,8 +198,20 @@ test_dynamo_shard() {
       test_python_dispatch \
       test_fx \
       test_package \
-      test_vmap \
+      test_vmap"
+  if [[ "${TEST_CONFIG}" == *inductor* ]]; then
+    SKIP_LIST="${SKIP_LIST} \
+      test_distributions \
+      test_dropout"
+  fi
+  # Temporarily disable test_fx for dynamo pending the investigation on TTS
+  # regression in https://github.com/pytorch/torchdynamo/issues/784
+  time python test/run_test.py \
+    --exclude-jit-executor \
+    --exclude-distributed-tests \
+    --exclude "${SKIP_LIST}" \
     --shard "$1" "$NUM_TEST_SHARDS" \
+    --continue-through-error \
     --verbose
   assert_git_not_dirty
 }
@@ -652,13 +662,21 @@ elif [[ "$TEST_CONFIG" == distributed ]]; then
   if [[ "${SHARD_NUMBER}" == 1 ]]; then
     test_rpc
   fi
-elif [[ "${TEST_CONFIG}" == *dynamo* && "${SHARD_NUMBER}" == 1 && $NUM_TEST_SHARDS -gt 1 ]]; then
+elif [[ "${TEST_CONFIG}" == *dynamo* || "${TEST_CONFIG}" == *inductor* ]] && [[ "${SHARD_NUMBER}" == 1 && $NUM_TEST_SHARDS -gt 1 ]]; then
   test_without_numpy
+  install_jinja2
+  if [[ "$BUILD_ENVIRONMENT" == *cuda* ]]; then
+    install_triton
+  fi
   install_torchvision
-  install_torchdynamo
+  checkout_install_torchdynamo
   test_dynamo_shard 1
   test_aten
-elif [[ "${TEST_CONFIG}" == *dynamo* && "${SHARD_NUMBER}" == 2 && $NUM_TEST_SHARDS -gt 1 ]]; then
+elif [[ "${TEST_CONFIG}" == *dynamo* || "${TEST_CONFIG}" == *inductor* ]] && [[ "${SHARD_NUMBER}" == 2 && $NUM_TEST_SHARDS -gt 1 ]]; then
+  install_jinja2
+  if [[ "$BUILD_ENVIRONMENT" == *cuda* ]]; then
+    install_triton
+  fi
   install_torchvision
   checkout_install_torchdynamo
   test_dynamo_shard 2
